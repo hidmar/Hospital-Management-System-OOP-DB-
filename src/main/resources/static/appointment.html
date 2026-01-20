@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Appointment</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f4f7f6; padding-top: 50px; }
+        .form-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-container">
+        <h2 class="text-center mb-4 text-primary">Book an Appointment</h2>
+
+        <form id="appointmentForm">
+            <div class="form-group">
+                <label>Select Patient</label>
+                <select class="form-control" id="patientSelect" required>
+                    <option value="">Loading patients...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Select Doctor</label>
+                <select class="form-control" id="doctorSelect" required>
+                    <option value="">Loading doctors...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Date & Time</label>
+                <input type="datetime-local" class="form-control" id="appointmentTime" required>
+            </div>
+
+            <div class="form-group">
+                <label>Reason for Visit</label>
+                <textarea class="form-control" id="reason" rows="3" placeholder="e.g. Fever, Checkup..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Confirm Booking</button>
+            <a href="index.html" class="btn btn-link btn-block">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 1. Load Dropdowns on Page Load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDropdown('http://localhost:8080/api/patients', 'patientSelect', 'firstName', 'lastName');
+        loadDropdown('http://localhost:8080/api/doctors', 'doctorSelect', 'firstName', 'lastName');
+    });
+
+    function loadDropdown(url, elementId, field1, field2) {
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById(elementId);
+                select.innerHTML = '<option value="">-- Select --</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id; // We send the ID to the backend
+                    option.textContent = `${item[field1]} ${item[field2]}`;
+                    select.appendChild(option);
+                });
+            });
+    }
+
+    // 2. Handle Form Submission
+    document.getElementById('appointmentForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const data = {
+            patient: { id: document.getElementById('patientSelect').value },
+            doctor: { id: document.getElementById('doctorSelect').value },
+            appointmentTime: document.getElementById('appointmentTime').value,
+            reason: document.getElementById('reason').value,
+            status: "SCHEDULED"
+        };
+
+        fetch('http://localhost:8080/api/appointments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if(response.ok) {
+                    alert("✅ Appointment Booked Successfully!");
+                    window.location.href = "index.html";
+                } else {
+                    alert("❌ Error booking appointment.");
+                }
+            });
+    });
+</script>
+
+</body>
+</html>

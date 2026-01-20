@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient 360 Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body { background-color: #f4f7f6; padding-top: 30px; padding-bottom: 50px; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .profile-header { background: linear-gradient(135deg, #28a745, #218838); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; }
+        .section-title { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #555; font-weight: 600; }
+        .medicine-tag { background-color: #e9ecef; border-radius: 4px; padding: 2px 6px; font-size: 0.9em; margin-right: 5px; }
+        .remove-row { color: #dc3545; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
+        .remove-row:hover { color: #a71d2a; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="patients.html" class="btn btn-outline-secondary mb-3">← Back to List</a>
+
+    <div id="profile-header" class="profile-header d-flex justify-content-between align-items-center">
+        <div>
+            <h1 id="p-name" class="display-4" style="font-size: 2.5rem; font-weight: 700;">Loading...</h1>
+            <p id="p-contact" class="lead mb-0">...</p>
+        </div>
+        <div class="text-right">
+            <span id="p-insurance" class="badge badge-light badge-lg mb-2">Insurance: -</span><br>
+            <button class="btn btn-light btn-sm font-weight-bold text-success mt-2" onclick="openEditModal()">✎ Edit Profile</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card p-4">
+                <h5 class="section-title text-primary">🏥 Current Admission Status</h5>
+                <div class="row text-center">
+                    <div class="col-md-4"><p class="text-muted mb-1">Ward</p><h5 id="p-ward" class="font-weight-bold">-</h5></div>
+                    <div class="col-md-4"><p class="text-muted mb-1">Room</p><h5 id="p-room" class="font-weight-bold">-</h5></div>
+                    <div class="col-md-4"><p class="text-muted mb-1">Doctor</p><h5 id="p-doctor" class="text-primary">-</h5></div>
+                </div>
+            </div>
+
+            <div class="card p-4">
+                <h5 class="section-title text-danger">📋 Diagnosis & Medical History</h5>
+                <div id="medical-records-list">Loading...</div>
+            </div>
+
+            <div class="card p-4">
+                <h5 class="section-title text-info">🧬 Lab Results History</h5>
+                <table class="table table-sm table-hover">
+                    <thead class="thead-light"><tr><th>Date</th><th>Test</th><th>Result</th></tr></thead>
+                    <tbody id="labs-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4">
+                <h5 class="section-title">👩‍⚕️ Care Team</h5>
+                <p><strong>Nurse:</strong> <span id="p-nurse">-</span></p>
+                <p><strong>Dept:</strong> <span id="p-dept">-</span></p>
+            </div>
+
+            <div class="card p-4">
+                <h5 class="section-title text-secondary">💊 Active Prescriptions</h5>
+                <div id="prescriptions-list">Loading...</div>
+            </div>
+
+            <div class="card p-4">
+                <h5 class="section-title text-warning">📅 Appointments</h5>
+                <ul id="appointments-list" class="list-group list-group-flush"></ul>
+            </div>
+
+            <div class="card p-4">
+                <h5 class="section-title text-success">💸 Billing</h5>
+                <div id="invoices-list"></div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <strong>Total Due:</strong>
+                    <span id="total-due" class="text-danger font-weight-bold">$0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Edit Patient & Medical Details</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="edit-id">
+
+                    <h6 class="text-muted text-success">👤 Personal Info</h6>
+                    <div class="form-row">
+                        <div class="col"><label>First Name</label><input type="text" id="edit-firstName" class="form-control" required></div>
+                        <div class="col"><label>Last Name</label><input type="text" id="edit-lastName" class="form-control" required></div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col"><label>Email</label><input type="email" id="edit-email" class="form-control" required></div>
+                        <div class="col"><label>Insurance ID</label><input type="text" id="edit-insurance" class="form-control"></div>
+                    </div>
+
+                    <h6 class="text-muted text-primary mt-3">🏥 Infrastructure & Staff</h6>
+                    <div class="form-row">
+                        <div class="col"><label>Ward</label><select id="edit-ward" class="form-control"><option value="">-- No Ward --</option></select></div>
+                        <div class="col"><label>Room</label><select id="edit-room" class="form-control" disabled><option value="">-- Select Ward First --</option></select></div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col"><label>Primary Doctor</label><select id="edit-doctor" class="form-control"><option value="">-- No Doctor --</option></select></div>
+                        <div class="col"><label>Assigned Nurse</label><select id="edit-nurse" class="form-control"><option value="">-- No Nurse --</option></select></div>
+                    </div>
+
+                    <h6 class="text-muted text-danger mt-3">📋 Update Diagnosis</h6>
+                    <input type="hidden" id="edit-record-id">
+                    <input type="text" id="edit-diagnosis" class="form-control mb-2" placeholder="Diagnosis (e.g. Flu)">
+                    <textarea id="edit-treatment" class="form-control" rows="2" placeholder="Treatment Plan"></textarea>
+
+                    <h6 class="text-muted text-secondary mt-3 d-flex justify-content-between align-items-center">
+                        <span>💊 Write New Prescription</span>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="addMedRow()">+ Add Med</button>
+                    </h6>
+                    <div class="card p-2 bg-light">
+                        <table class="table table-sm table-borderless mb-0">
+                            <thead><tr><th style="width:50%">Medicine</th><th>Dosage</th><th></th></tr></thead>
+                            <tbody id="med-rows">
+                            </tbody>
+                        </table>
+                        <div id="no-meds-msg" class="text-center text-muted small p-2">Click "+ Add Med" to prescribe drugs</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success btn-block mt-4">Save All Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Get Patient ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const patientId = urlParams.get('id');
+    if (!patientId) { alert("No Patient ID found!"); window.location.href = "patients.html"; }
+
+    let currentPatient = null;
+    let currentRecords = [];
+    let allWards=[], allRooms=[], allDoctors=[], allNurses=[], allMeds=[];
+
+    // 2. Main Data Fetch (Fail-safe: one error won't stop the whole page)
+    Promise.all([
+        fetch('http://localhost:8080/api/patients').then(r => r.json()),
+        fetch('http://localhost:8080/api/appointments').then(r => r.json()),
+        fetch('http://localhost:8080/api/lab/results').then(r => r.json()),
+        fetch('http://localhost:8080/api/invoices').then(r => r.json()),
+        fetch('http://localhost:8080/api/medical-records').then(r => r.json().catch(() => [])),
+        fetch('http://localhost:8080/api/prescriptions').then(r => r.json().catch(() => [])),
+        fetch('http://localhost:8080/api/infrastructure/wards').then(r => r.json().catch(() => [])),
+        fetch('http://localhost:8080/api/infrastructure/rooms').then(r => r.json().catch(() => [])),
+        fetch('http://localhost:8080/api/doctors').then(r => r.json().catch(() => [])),
+        fetch('http://localhost:8080/api/nurses').then(r => r.json().catch(() => [])),
+        fetch('http://localhost:8080/api/medicines').then(r => r.json().catch(() => []))
+    ]).then(([patients, appointments, labs, invoices, medicalRecords, prescriptions, wards, rooms, doctors, nurses, medicines]) => {
+
+        currentPatient = patients.find(p => p.id == patientId);
+        if (!currentPatient) { document.body.innerHTML="<h1 class='text-center mt-5'>Patient Not Found</h1>"; return; }
+
+        allWards = wards; allRooms = rooms; allDoctors = doctors; allNurses = nurses; allMeds = medicines;
+        currentRecords = medicalRecords.filter(r => r.patient && r.patient.id == patientId);
+
+        renderProfile(currentPatient, appointments, labs, invoices, currentRecords, prescriptions);
+
+    }).catch(err => {
+        console.error(err);
+        alert("Error loading profile. Ensure Backend is running.");
+    });
+
+    // 3. Render Page Content
+    function renderProfile(patient, appointments, labs, invoices, medicalRecords, prescriptions) {
+        document.getElementById('p-name').textContent = `${patient.firstName} ${patient.lastName}`;
+        document.getElementById('p-contact').textContent = `${patient.email}`;
+        document.getElementById('p-insurance').textContent = `ID: ${patient.insuranceId}`;
+
+        document.getElementById('p-ward').textContent = patient.ward ? patient.ward.name : '-';
+        document.getElementById('p-room').textContent = patient.room ? `Rm ${patient.room.roomNumber}` : '-';
+        document.getElementById('p-doctor').textContent = patient.doctor ? `Dr. ${patient.doctor.lastName}` : '-';
+        document.getElementById('p-nurse').textContent = patient.nurse ? patient.nurse.firstName : '-';
+
+        // Medical Records
+        const recordList = document.getElementById('medical-records-list');
+        recordList.innerHTML = medicalRecords.length ? '' : '<p class="text-muted">No medical history.</p>';
+        medicalRecords.forEach(r => {
+            recordList.innerHTML += `<div class="mb-3 border-bottom pb-2"><h6 class="font-weight-bold mb-1 text-danger">${r.diagnosis}</h6><p class="mb-1 small">${r.treatmentPlan}</p></div>`;
+        });
+
+        // Prescriptions
+        const rxList = document.getElementById('prescriptions-list');
+        const myRx = prescriptions.filter(p => p.patient && p.patient.id == patientId);
+        rxList.innerHTML = myRx.length ? '' : '<p class="text-muted">No active prescriptions.</p>';
+        myRx.forEach(rx => {
+            let items = (rx.items || []).map(i => `<span class="medicine-tag">${i.medicine.name}</span>`).join("");
+            rxList.innerHTML += `<div class="mb-2 p-2 bg-light rounded"><small>Rx #${rx.id} (${formatJavaDate(rx.issueDate)})</small><br>${items}</div>`;
+        });
+
+        // Appointments
+        const apptList = document.getElementById('appointments-list'); apptList.innerHTML = '';
+        appointments.filter(a => a.patient && a.patient.id == patientId).forEach(a => {
+            apptList.innerHTML += `<li class="list-group-item p-2"><small><strong>${formatJavaDate(a.appointmentTime)}</strong></small><br>${a.reason}</li>`;
+        });
+
+        // Invoices
+        const invList = document.getElementById('invoices-list'); invList.innerHTML=''; let total=0;
+        invoices.filter(i=>i.patient && i.patient.id==patientId).forEach(i=>{ if(!i.paid) total+=i.totalAmount; invList.innerHTML += `<div><small>${formatJavaDate(i.issueDate)}</small> <span class="${i.paid?'text-success':'text-danger'}">$${i.totalAmount}</span></div>`; });
+        document.getElementById('total-due').textContent=`$${total.toFixed(2)}`;
+
+        // Labs
+        const labBody = document.getElementById('labs-body'); labBody.innerHTML='';
+        labs.filter(l=>l.patient && l.patient.id==patientId).forEach(l=>{ const r=labBody.insertRow(); r.insertCell().textContent=formatJavaDate(l.testDate); r.insertCell().textContent=l.labTest.name; r.insertCell().textContent=l.resultNotes; });
+    }
+
+    // --- HELPER: Date Formatter ---
+    function formatJavaDate(dateData) {
+        if (!dateData) return "No Date";
+        if (Array.isArray(dateData)) return new Date(dateData[0], dateData[1]-1, dateData[2]).toLocaleDateString();
+        return new Date(dateData).toLocaleDateString();
+    }
+
+    // --- MODAL: Add Prescription Row ---
+    function addMedRow() {
+        document.getElementById('no-meds-msg').style.display = 'none';
+        const tbody = document.getElementById('med-rows');
+        const row = document.createElement('tr');
+
+        let medOptions = `<option value="">Select...</option>`;
+        allMeds.forEach(m => medOptions += `<option value="${m.id}">${m.name} ($${m.price})</option>`);
+
+        row.innerHTML = `
+            <td><select class="form-control form-control-sm med-select" required>${medOptions}</select></td>
+            <td><input type="text" class="form-control form-control-sm med-dosage" placeholder="1 daily" required></td>
+            <td><span class="remove-row" onclick="this.closest('tr').remove()">×</span></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    // --- MODAL: Open & Fill ---
+    function openEditModal() {
+        if (!currentPatient) return;
+        // 1. Fill Personal Info
+        document.getElementById('edit-id').value = currentPatient.id;
+        document.getElementById('edit-firstName').value = currentPatient.firstName;
+        document.getElementById('edit-lastName').value = currentPatient.lastName;
+        document.getElementById('edit-email').value = currentPatient.email;
+        document.getElementById('edit-insurance').value = currentPatient.insuranceId || '';
+
+        // 2. Fill Dropdowns
+        const wSel = document.getElementById('edit-ward');
+        const dSel = document.getElementById('edit-doctor');
+        const nSel = document.getElementById('edit-nurse');
+        wSel.innerHTML='<option value="">-- No Ward --</option>';
+        dSel.innerHTML='<option value="">-- No Doctor --</option>';
+        nSel.innerHTML='<option value="">-- No Nurse --</option>';
+        allWards.forEach(w => wSel.add(new Option(w.name, w.id)));
+        allDoctors.forEach(d => dSel.add(new Option(`${d.firstName} ${d.lastName}`, d.id)));
+        allNurses.forEach(n => nSel.add(new Option(`${n.firstName} ${n.lastName}`, n.id)));
+
+        if(currentPatient.ward) wSel.value = currentPatient.ward.id;
+        if(currentPatient.doctor) dSel.value = currentPatient.doctor.id;
+        if(currentPatient.nurse) nSel.value = currentPatient.nurse.id;
+
+        populateRooms(currentPatient.ward ? currentPatient.ward.id : null, currentPatient.room ? currentPatient.room.id : null);
+
+        // 3. Fill Latest Diagnosis
+        const lastRecord = currentRecords.length > 0 ? currentRecords[currentRecords.length - 1] : null;
+        document.getElementById('edit-record-id').value = lastRecord ? lastRecord.id : "";
+        document.getElementById('edit-diagnosis').value = lastRecord ? lastRecord.diagnosis : "";
+        document.getElementById('edit-treatment').value = lastRecord ? lastRecord.treatmentPlan : "";
+
+        // 4. Reset Prescription Table
+        document.getElementById('med-rows').innerHTML = "";
+        document.getElementById('no-meds-msg').style.display = 'block';
+
+        $('#editModal').modal('show');
+    }
+
+    function populateRooms(wardId, selectedRoomId) {
+        const roomSelect = document.getElementById('edit-room');
+        roomSelect.innerHTML = '<option value="">-- Select Room --</option>';
+        if (wardId) {
+            roomSelect.disabled = false;
+            allRooms.filter(r => r.ward && r.ward.id == wardId).forEach(r => roomSelect.add(new Option(`Room ${r.roomNumber}`, r.id)));
+            if (selectedRoomId) roomSelect.value = selectedRoomId;
+        } else { roomSelect.disabled = true; }
+    }
+    document.getElementById('edit-ward').addEventListener('change', function() { populateRooms(this.value, null); });
+
+    // --- SAVE LOGIC ---
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const getVal = (id) => { const v = document.getElementById(id).value; return v ? { id: v } : null; };
+
+        const patientData = {
+            id: document.getElementById('edit-id').value,
+            firstName: document.getElementById('edit-firstName').value,
+            lastName: document.getElementById('edit-lastName').value,
+            email: document.getElementById('edit-email').value,
+            insuranceId: document.getElementById('edit-insurance').value,
+            ward: getVal('edit-ward'),
+            room: getVal('edit-room'),
+            doctor: getVal('edit-doctor'),
+            nurse: getVal('edit-nurse')
+        };
+
+        const updatePromises = [];
+
+        // 1. Update Patient
+        updatePromises.push(
+            fetch('http://localhost:8080/api/patients', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(patientData)
+            }).then(res => { if(!res.ok) throw new Error("Failed to save Patient info"); return res; })
+        );
+
+        // 2. Update/Create Medical Record
+        const diag = document.getElementById('edit-diagnosis').value;
+        if (diag) {
+            if (!patientData.doctor) { alert("⚠️ Select a Doctor to save Diagnosis."); return; }
+            // DATE FIX: Use ISO string but cut off milliseconds for Java LocalDateTime
+            const cleanDateTime = new Date().toISOString().slice(0, 19);
+
+            updatePromises.push(
+                fetch('http://localhost:8080/api/medical-records', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        id: document.getElementById('edit-record-id').value || null,
+                        patient: { id: patientData.id },
+                        doctor: patientData.doctor,
+                        diagnosis: diag,
+                        treatmentPlan: document.getElementById('edit-treatment').value,
+                        dateOfVisit: cleanDateTime // "2026-01-09T12:00:00"
+                    })
+                }).then(res => { if(!res.ok) throw new Error("Failed to save Diagnosis"); return res; })
+            );
+        }
+
+        // 3. Create NEW Prescription
+        const medRows = document.querySelectorAll('#med-rows tr');
+        if (medRows.length > 0) {
+            if (!patientData.doctor) { alert("⚠️ Select a Doctor to prescribe meds."); return; }
+            const rxItems = [];
+            medRows.forEach(row => {
+                const medId = row.querySelector('.med-select').value;
+                const dosage = row.querySelector('.med-dosage').value;
+                if (medId && dosage) { rxItems.push({ medicine: { id: medId }, quantity: 1, dosage: dosage }); }
+            });
+
+            if (rxItems.length > 0) {
+                // DATE FIX: Manually build YYYY-MM-DD for Java LocalDate
+                const now = new Date();
+                const cleanDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+                updatePromises.push(
+                    fetch('http://localhost:8080/api/prescriptions', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            patient: { id: patientData.id },
+                            doctor: patientData.doctor,
+                            issueDate: cleanDate, // "2026-01-09"
+                            notes: "Prescribed via Patient 360",
+                            items: rxItems
+                        })
+                    }).then(res => {
+                        if(!res.ok) return res.text().then(t => { throw new Error("Rx Error: " + t) });
+                        return res;
+                    })
+                );
+            }
+        }
+
+        Promise.all(updatePromises)
+            .then(() => { alert("✅ All changes saved successfully!"); location.reload(); })
+            .catch(err => alert("❌ Error saving: " + err.message));
+    });
+</script>
+</body>
+</html>

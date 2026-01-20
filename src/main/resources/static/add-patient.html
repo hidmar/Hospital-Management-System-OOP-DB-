@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add New Patient</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body { background-color: #f4f7f6; padding-top: 50px; }
+    .form-container {
+      background-color: white; padding: 40px; border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 600px; margin: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="form-container">
+    <h3 class="text-center text-success mb-4">Register New Patient</h3>
+    <form id="patientForm">
+      <div class="form-row">
+        <div class="col">
+          <label>First Name</label>
+          <input type="text" id="firstName" class="form-control" required>
+        </div>
+        <div class="col">
+          <label>Last Name</label>
+          <input type="text" id="lastName" class="form-control" required>
+        </div>
+      </div>
+      <div class="form-group mt-3">
+        <label>Insurance ID</label>
+        <input type="text" id="insuranceId" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="phoneNumber" class="form-control" required>
+      </div>
+
+      <hr>
+      <h5 class="text-muted mb-3">Medical & Admission Details</h5>
+
+      <div class="form-group">
+        <label>Assign Doctor</label>
+        <select id="doctorSelect" class="form-control">
+          <option value="">-- Select Doctor --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Assign to Ward</label>
+        <select id="wardSelect" class="form-control">
+          <option value="">-- Select Ward --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Assign Room</label>
+        <select id="roomSelect" class="form-control" disabled>
+          <option value="">-- First Select a Ward --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Assign Nurse</label>
+        <select id="nurseSelect" class="form-control" disabled>
+          <option value="">-- First Select a Ward --</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-success btn-block mt-4">Save Patient & Admit</button>
+      <a href="patients.html" class="btn btn-link btn-block">Cancel</a>
+    </form>
+  </div>
+</div>
+
+<script>
+  let allRooms = [];
+  let allNurses = [];
+
+  // 1. Load Data on Page Start
+  document.addEventListener('DOMContentLoaded', () => {
+    Promise.all([
+      fetch('http://localhost:8080/api/infrastructure/wards').then(res => res.json()),
+      fetch('http://localhost:8080/api/infrastructure/rooms').then(res => res.json()),
+      fetch('http://localhost:8080/api/nurses').then(res => res.json()),
+      fetch('http://localhost:8080/api/doctors').then(res => res.json()) // Fetch Doctors
+    ]).then(([wards, rooms, nurses, doctors]) => {
+
+      allRooms = rooms;
+      allNurses = nurses;
+
+      // Populate Ward Dropdown
+      const wardSelect = document.getElementById('wardSelect');
+      wards.forEach(ward => {
+        wardSelect.add(new Option(ward.name, ward.id));
+      });
+
+      // Populate Doctor Dropdown (NEW)
+      const doctorSelect = document.getElementById('doctorSelect');
+      doctors.forEach(doc => {
+        doctorSelect.add(new Option(`Dr. ${doc.firstName} ${doc.lastName} (${doc.specialization})`, doc.id));
+      });
+    });
+  });
+
+  // 2. Logic: When Ward is changed, filter Rooms and Nurses
+  document.getElementById('wardSelect').addEventListener('change', function() {
+    const selectedWardId = this.value;
+    const roomSelect = document.getElementById('roomSelect');
+    const nurseSelect = document.getElementById('nurseSelect');
+
+    roomSelect.innerHTML = '<option value="">-- Select Room --</option>';
+    nurseSelect.innerHTML = '<option value="">-- Select Nurse --</option>';
+
+    if (selectedWardId) {
+      roomSelect.disabled = false;
+      nurseSelect.disabled = false;
+
+      // Filter Rooms
+      allRooms.filter(r => r.ward && r.ward.id == selectedWardId)
+              .forEach(r => roomSelect.add(new Option(`Room ${r.roomNumber}`, r.id)));
+
+      // Filter Nurses
+      allNurses.filter(n => n.ward && n.ward.id == selectedWardId)
+              .forEach(n => nurseSelect.add(new Option(`${n.firstName} ${n.lastName}`, n.id)));
+    } else {
+      roomSelect.disabled = true;
+      nurseSelect.disabled = true;
+    }
+  });
+
+  // 3. Submit Form
+  document.getElementById('patientForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    // Helper to safely get value or null
+    const getVal = (id) => {
+      const val = document.getElementById(id).value;
+      return val ? { id: val } : null;
+    };
+
+    const data = {
+      firstName: document.getElementById('firstName').value,
+      lastName: document.getElementById('lastName').value,
+      insuranceId: document.getElementById('insuranceId').value,
+      email: document.getElementById('email').value,
+      phoneNumber: document.getElementById('phoneNumber').value,
+
+      doctor: getVal('doctorSelect'), // Send Doctor ID
+      ward: getVal('wardSelect'),
+      room: getVal('roomSelect'),
+      nurse: getVal('nurseSelect')
+    };
+
+    fetch('http://localhost:8080/api/patients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+            .then(response => {
+              if(response.ok) {
+                alert("✅ Patient Admitted Successfully!");
+                window.location.href = "patients.html";
+              } else {
+                alert("❌ Error adding patient.");
+              }
+            });
+  });
+</script>
+</body>
+</html>

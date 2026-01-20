@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add New Nurse</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f4f7f6; padding-top: 50px; }
+        .form-container {
+            background-color: white; padding: 40px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; margin: auto;
+        }
+        .btn-pink { background-color: #e83e8c; color: white; border: none; }
+        .btn-pink:hover { background-color: #d63384; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-container">
+        <h3 class="text-center mb-4" style="color: #e83e8c;">Register New Nurse</h3>
+        <form id="nurseForm">
+            <div class="form-group">
+                <label>First Name</label>
+                <input type="text" id="firstName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" id="lastName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label>Shift</label>
+                <select id="shift" class="form-control" required>
+                    <option value="Day Shift">Day Shift (7AM - 7PM)</option>
+                    <option value="Night Shift">Night Shift (7PM - 7AM)</option>
+                    <option value="Rotating">Rotating</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Assigned Ward</label>
+                <select id="wardSelect" class="form-control" required>
+                    <option value="">Loading wards...</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-pink btn-block">Save Nurse</button>
+            <a href="nurses.html" class="btn btn-link btn-block">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 1. Load Wards for the Dropdown
+    document.addEventListener('DOMContentLoaded', () => {
+        // We use the infrastructure endpoint we created earlier
+        fetch('http://localhost:8080/api/infrastructure/wards')
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('wardSelect');
+                select.innerHTML = '<option value="">-- Select Ward --</option>';
+                data.forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.id;
+                    option.textContent = ward.name;
+                    select.appendChild(option);
+                });
+            });
+    });
+
+    // 2. Handle Form Submission
+    document.getElementById('nurseForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const data = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            shift: document.getElementById('shift').value,
+            // Link to the Ward Object
+            ward: {
+                id: document.getElementById('wardSelect').value
+            }
+        };
+
+        fetch('http://localhost:8080/api/nurses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if(response.ok) {
+                    alert("✅ Nurse Added Successfully!");
+                    window.location.href = "nurses.html";
+                } else {
+                    alert("❌ Error adding nurse. Check console for details.");
+                }
+            });
+    });
+</script>
+</body>
+</html>

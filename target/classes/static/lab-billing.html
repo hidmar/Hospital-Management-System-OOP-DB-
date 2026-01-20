@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lab & Billing</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body { background-color: #f4f7f6; padding-top: 50px; font-family: 'Segoe UI', sans-serif; }
+    .container { background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h2 { color: #17a2b8; font-weight: 700; } /* Cyan for Lab */
+    .nav-tabs .nav-link.active { background-color: #17a2b8; color: white; border-color: #17a2b8; }
+    .nav-tabs .nav-link { color: #17a2b8; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2 class="text-center mb-4">Laboratory & Billing Center</h2>
+  <a href="index.html" class="btn btn-secondary mb-4">← Back to Dashboard</a>
+
+  <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="tests-tab" data-toggle="tab" href="#tests" role="tab">🧪 Available Tests</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="results-tab" data-toggle="tab" href="#results" role="tab">🔬 Patient Results</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="invoices-tab" data-toggle="tab" href="#invoices" role="tab">💸 Invoices</a>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="myTabContent">
+
+    <div class="tab-pane fade show active" id="tests" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-info mb-0">Test Catalog</h4>
+        <a href="add-lab-test.html" class="btn btn-sm btn-info">+ Define New Test</a>
+      </div>
+      <table class="table table-bordered">
+        <thead class="thead-light"><tr><th>ID</th><th>Test Name</th><th>Description</th><th>Price ($)</th></tr></thead>
+        <tbody id="tests-body"></tbody>
+      </table>
+    </div>
+
+    <div class="tab-pane fade" id="results" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-info mb-0">Recent Lab Results</h4>
+        <a href="add-result.html" class="btn btn-sm btn-info">+ Log New Result</a>
+      </div>
+      <table class="table table-bordered">
+        <thead class="thead-light"><tr><th>Date</th><th>Patient</th><th>Test Type</th><th>Result / Notes</th></tr></thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+
+    <div class="tab-pane fade" id="invoices" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-success mb-0">Billing & Invoices</h4>
+        <a href="add-invoice.html" class="btn btn-sm btn-success">+ Generate Invoice</a>
+      </div>
+      <table class="table table-bordered table-striped">
+        <thead class="thead-light"><tr><th>ID</th><th>Patient</th><th>Date</th><th>Amount</th><th>Status</th><th>Method</th></tr></thead>
+        <tbody id="invoices-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // 1. Load Available Tests
+  fetch('http://localhost:8080/api/lab/tests')
+          .then(res => res.json())
+          .then(data => {
+            const tbody = document.getElementById('tests-body');
+            if (data.length === 0) tbody.innerHTML = '<tr><td colspan="4">No tests defined.</td></tr>';
+            data.forEach(t => {
+              const row = tbody.insertRow();
+              row.insertCell().textContent = t.id;
+              row.insertCell().textContent = t.name;
+              row.insertCell().textContent = t.description;
+              row.insertCell().textContent = `$${t.price}`;
+            });
+          });
+
+  // 2. Load Results
+  fetch('http://localhost:8080/api/lab/results')
+          .then(res => res.json())
+          .then(data => {
+            const tbody = document.getElementById('results-body');
+            if (data.length === 0) tbody.innerHTML = '<tr><td colspan="4">No results found.</td></tr>';
+            data.forEach(r => {
+              const row = tbody.insertRow();
+              row.insertCell().textContent = new Date(r.testDate).toLocaleDateString();
+              row.insertCell().textContent = `${r.patient.firstName} ${r.patient.lastName}`;
+              row.insertCell().textContent = r.labTest.name;
+              row.insertCell().textContent = r.resultNotes;
+            });
+          });
+
+  // 3. Load Invoices
+  fetch('http://localhost:8080/api/invoices')
+          .then(res => res.json())
+          .then(data => {
+            const tbody = document.getElementById('invoices-body');
+            if (data.length === 0) tbody.innerHTML = '<tr><td colspan="6">No invoices found.</td></tr>';
+            data.forEach(inv => {
+              const row = tbody.insertRow();
+              row.insertCell().textContent = inv.id;
+              row.insertCell().textContent = `${inv.patient.firstName} ${inv.patient.lastName}`;
+              row.insertCell().textContent = new Date(inv.issueDate).toLocaleDateString();
+              row.insertCell().textContent = `$${inv.totalAmount}`;
+
+              const statusCell = row.insertCell();
+              if(inv.paid) statusCell.innerHTML = '<span class="badge badge-success">Paid</span>';
+              else statusCell.innerHTML = '<span class="badge badge-danger">Unpaid</span>';
+
+              row.insertCell().textContent = inv.paymentMethod || 'N/A';
+            });
+          });
+</script>
+
+</body>
+</html>

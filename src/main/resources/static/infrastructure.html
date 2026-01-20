@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hospital Infrastructure</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body { background-color: #f4f7f6; padding-top: 50px; }
+    .container { background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h2 { color: #6610f2; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2 class="text-center mb-4">Hospital Infrastructure</h2>
+  <a href="index.html" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+
+  <h4 class="text-primary mt-4">🏥 Wards</h4>
+  <table class="table table-sm table-bordered">
+    <thead class="thead-light"><tr><th>ID</th><th>Name</th><th>Total Capacity</th><th>Department</th></tr></thead>
+    <tbody id="wards-body"></tbody>
+  </table>
+
+  <h4 class="text-info mt-5">🛏️ Rooms & Occupancy</h4>
+  <table class="table table-sm table-bordered table-hover">
+    <thead class="thead-light">
+    <tr>
+      <th>Room #</th>
+      <th>Type</th>
+      <th>Ward</th>
+      <th>Occupancy Status</th>
+    </tr>
+    </thead>
+    <tbody id="rooms-body"></tbody>
+  </table>
+</div>
+
+<script>
+  // 1. Fetch Wards, Rooms, Beds, AND PATIENTS
+  Promise.all([
+    fetch('http://localhost:8080/api/infrastructure/wards').then(res => res.json()),
+    fetch('http://localhost:8080/api/infrastructure/rooms').then(res => res.json()),
+    fetch('http://localhost:8080/api/infrastructure/beds').then(res => res.json()),
+    fetch('http://localhost:8080/api/patients').then(res => res.json()) // <--- New Fetch
+  ]).then(([wards, rooms, beds, patients]) => {
+
+    // --- Render Wards ---
+    const wardsBody = document.getElementById('wards-body');
+    wards.forEach(ward => {
+      const row = wardsBody.insertRow();
+      row.insertCell().textContent = ward.id;
+      row.insertCell().textContent = ward.name;
+      row.insertCell().textContent = ward.capacity;
+      row.insertCell().textContent = ward.department ? ward.department.name : 'N/A';
+    });
+
+    // --- Render Rooms with Patient Count ---
+    const roomsBody = document.getElementById('rooms-body');
+
+    rooms.forEach(room => {
+      const row = roomsBody.insertRow();
+      row.insertCell().textContent = room.roomNumber;
+      row.insertCell().textContent = room.type;
+      row.insertCell().textContent = room.ward ? room.ward.name : 'N/A';
+
+      // LOGIC FIX:
+      // Capacity = Number of physical beds in the room
+      const totalCapacity = beds.filter(bed => bed.room.id === room.id).length;
+
+      // Occupancy = Number of patients assigned to this room
+      const occupiedCount = patients.filter(p => p.room && p.room.id === room.id).length;
+
+      // Create Status Badge
+      const cell = row.insertCell();
+
+      if (totalCapacity === 0) {
+        cell.innerHTML = '<span class="badge badge-secondary">No Beds Configured</span>';
+      } else if (occupiedCount >= totalCapacity) {
+        // Room is Full
+        cell.innerHTML = `<span class="badge badge-danger">FULL (${occupiedCount}/${totalCapacity})</span>`;
+      } else if (occupiedCount === 0) {
+        // Room is Empty
+        cell.innerHTML = `<span class="badge badge-success">Empty (${occupiedCount}/${totalCapacity})</span>`;
+      } else {
+        // Partial
+        cell.innerHTML = `<span class="badge badge-warning">Partial (${occupiedCount}/${totalCapacity})</span>`;
+      }
+    });
+  });
+</script>
+</body>
+</html>

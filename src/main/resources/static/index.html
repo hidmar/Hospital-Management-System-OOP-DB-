@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hospital Management System</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #cae2ff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .hero-section {
+      /* 1. We use a linear-gradient to darken the image so text pops */
+      /* 2. Replace the URL below with 'images/hospital-bg.jpg' if using a local file */
+      background: linear-gradient(rgba(0, 50, 100, 0.7), rgba(0, 50, 100, 0.7)),
+      url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+
+      background-size: cover;      /* Ensures image covers the whole area */
+      background-position: center; /* Centers the image */
+      background-repeat: no-repeat;
+
+      color: white;
+      padding: 100px 0; /* Taller header looks more professional */
+      margin-bottom: 40px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .display-4 {
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Text shadow for readability */
+    }
+    .card {
+      border: none;
+      border-radius: 15px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      margin-bottom: 30px;
+      height: 100%;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+    .btn-custom {
+      border-radius: 25px;
+      padding: 10px 25px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero-section">
+  <div class="container">
+    <h1 class="display-4">Hospital Management System</h1>
+    <p class="lead">Efficiently manage staff, patients, and appointments.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+
+    <div class="col-md-4">
+      <div class="card text-center p-4">
+        <div class="card-body">
+          <div class="card-icon text-primary">👨‍⚕️</div>
+          <h4 class="card-title">Medical Staff</h4>
+          <p class="card-text">View available doctors, their specializations, and departments.</p>
+          <a href="doctors.html" class="btn btn-primary btn-custom">View Doctors</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card text-center p-4">
+        <div class="card-body">
+          <div class="card-icon text-success">🏥</div>
+          <h4 class="card-title">Patient Registry</h4>
+          <p class="card-text">Manage patient records, insurance details, and history.</p>
+          <a href="patients.html" class="btn btn-success btn-custom">View Patients</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card text-center p-4">
+        <div class="card-body">
+          <div class="card-icon text-warning">📅</div>
+          <h4 class="card-title">Appointments</h4>
+          <p class="card-text">Book new appointments or check existing schedules.</p>
+          <a href="appointment.html" class="btn btn-warning text-dark btn-custom font-weight-bold">Book Now</a>
+          <br><br>
+          <a href="appointments-list.html" class="text-muted">View Scheduled List &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mt-4">
+      <div class="card text-center p-4">
+        <div class="card-body">
+          <div class="card-icon" style="color: #e83e8c;">👩‍⚕️</div>
+          <h4 class="card-title">Nurses</h4>
+          <p class="card-text">Manage nursing staff assignments and shifts.</p>
+          <a href="nurses.html" class="btn text-white btn-custom" style="background-color: #e83e8c;">View Nurses</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mt-4">
+      <div class="card text-center p-4">
+        <div class="card-body">
+          <div class="card-icon" style="color: #6610f2;">🏢</div>
+          <h4 class="card-title">Infrastructure</h4>
+          <p class="card-text">Overview of Wards, Rooms, and Hospital capacity.</p>
+          <a href="infrastructure.html" class="btn text-white btn-custom" style="background-color: #6610f2;">View Details</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mt-4">
+      <div class="card text-center p-4">
+        <div class="card-body">
+          <div class="card-icon" style="color: #17a2b8;">🧬</div>
+          <h4 class="card-title">Lab & Billing</h4>
+          <p class="card-text">View test results, lab catalog, and patient invoices.</p>
+          <a href="lab-billing.html" class="btn text-white btn-custom" style="background-color: #17a2b8;">View Reports</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="text-center mt-5 py-4 text-muted">
+  <p>&copy; 2026 Hospital Management System | Hideg Mark Alex</p>
+</footer>
+
+</body>
+</html>

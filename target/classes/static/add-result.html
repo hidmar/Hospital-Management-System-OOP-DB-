@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Lab Result</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>body { background-color: #f4f7f6; padding-top: 50px; }</style>
+</head>
+<body>
+<div class="container bg-white p-4 rounded shadow" style="max-width: 500px;">
+  <h3 class="text-center text-info mb-4">Log Lab Result</h3>
+
+  <form id="resultForm">
+    <div class="form-group">
+      <label>Select Patient</label>
+      <select id="patientSelect" class="form-control" required>
+        <option value="">Loading patients...</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Select Lab Test</label>
+      <select id="testSelect" class="form-control" required>
+        <option value="">Loading tests...</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Result / Diagnosis Notes</label>
+      <textarea id="notes" class="form-control" rows="3" required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-info btn-block">Save Result</button>
+    <a href="lab-billing.html" class="btn btn-link btn-block">Cancel</a>
+  </form>
+</div>
+
+<script>
+  // Load Dropdowns
+  Promise.all([
+    fetch('http://localhost:8080/api/patients').then(r => r.json()),
+    fetch('http://localhost:8080/api/lab/tests').then(r => r.json())
+  ]).then(([patients, tests]) => {
+
+    // Populate Patients
+    const pSelect = document.getElementById('patientSelect');
+    pSelect.innerHTML = '<option value="">-- Select Patient --</option>';
+    patients.forEach(p => {
+      pSelect.add(new Option(`${p.firstName} ${p.lastName}`, p.id));
+    });
+
+    // Populate Tests
+    const tSelect = document.getElementById('testSelect');
+    tSelect.innerHTML = '<option value="">-- Select Test --</option>';
+    tests.forEach(t => {
+      tSelect.add(new Option(t.name, t.id));
+    });
+  });
+
+  // Submit
+  document.getElementById('resultForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const data = {
+      patient: { id: document.getElementById('patientSelect').value },
+      labTest: { id: document.getElementById('testSelect').value },
+      resultNotes: document.getElementById('notes').value,
+      testDate: new Date().toISOString()
+    };
+
+    fetch('http://localhost:8080/api/lab/results', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    }).then(res => {
+      if(res.ok) { alert("Result Logged!"); window.location.href = "lab-billing.html"; }
+    });
+  });
+</script>
+</body>
+</html>

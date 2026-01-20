@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Appointments</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f4f7f6; padding-top: 50px; font-family: 'Segoe UI', sans-serif; }
+        .container {
+            background-color: white; padding: 40px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h2 { color: #ffc107; font-weight: 700; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); } /* Warning Yellow */
+        .table thead th { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="text-center mb-4">Scheduled Appointments</h2>
+    <a href="index.html" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Patient</th>
+            <th>Doctor</th>
+            <th>Date & Time</th>
+            <th>Reason</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody id="appointments-body">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api/appointments';
+
+    function loadAppointments() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('appointments-body');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No appointments scheduled.</td></tr>';
+                    return;
+                }
+
+                data.forEach(app => {
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = app.id;
+
+                    // Access nested objects (Patient & Doctor)
+                    row.insertCell().textContent = `${app.patient.firstName} ${app.patient.lastName}`;
+                    row.insertCell().textContent = `Dr. ${app.doctor.firstName} ${app.doctor.lastName}`;
+
+                    // Format Date nicely
+                    const dateObj = new Date(app.appointmentTime);
+                    row.insertCell().textContent = dateObj.toLocaleString();
+
+                    row.insertCell().textContent = app.reason;
+
+                    // Add a badge for status
+                    const statusCell = row.insertCell();
+                    statusCell.innerHTML = `<span class="badge badge-success">${app.status}</span>`;
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAppointments);
+</script>
+
+</body>
+</html>

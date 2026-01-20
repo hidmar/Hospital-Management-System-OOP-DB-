@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nursing Staff</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f4f7f6; padding-top: 50px; }
+        .container { background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #e83e8c; font-weight: 700; } /* Pink for Nurses */
+        .table thead th { background-color: #e83e8c; color: white; border-color: #e83e8c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="text-center mb-4">Nursing Staff Directory</h2>
+    <a href="index.html" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+    <a href="add-nurse.html" class="btn btn-success mb-3 ml-2" style="background-color: #e83e8c; border-color: #e83e8c;">+ Add New Nurse</a>
+
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Shift</th>
+            <th>Assigned Ward</th>
+            <th>Contact</th>
+        </tr>
+        </thead>
+        <tbody id="nurses-body"></tbody>
+    </table>
+</div>
+
+<script>
+    fetch('http://localhost:8080/api/nurses')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('nurses-body');
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No nurses found.</td></tr>';
+                return;
+            }
+            data.forEach(nurse => {
+                const row = tbody.insertRow();
+                row.insertCell().textContent = nurse.id;
+                row.insertCell().textContent = `${nurse.firstName} ${nurse.lastName}`;
+                row.insertCell().textContent = nurse.shift;
+
+                // Handle Ward Relationship
+                const wardName = nurse.ward ? nurse.ward.name : "Unassigned";
+                row.insertCell().textContent = wardName;
+
+                row.insertCell().textContent = nurse.email;
+            });
+        });
+</script>
+</body>
+</html>
